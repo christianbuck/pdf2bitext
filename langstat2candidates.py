@@ -21,13 +21,42 @@ requests
 """
 
 
+def read_candidates(infile, valid_hosts=None):
+    """ Read candidate urls from previous runs of this script """
+    candidates = {}
+    for line in infile:
+        try:
+            stripped_uri, target_link, target_page, \
+                target_href, link_text = line.split("\t")
+        except:
+            sys.stderr.write("Malformed input: '%s'" % line)
+            continue
+        candidates[stripped_uri] = (
+            target_link, target_page, target_href, link_text)
+    return candidates
+
+
+def print_match(stripped_url,
+                source_url, target_url,
+                source_page, target_page):
+    print "\t".join([stripped_url,
+                     source_url, target_url,
+                     source_page, target_page])
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-lang', help='language codes')
+    parser.add_argument('-candidates',
+                        help='candidates from url strippper',
+                        type=argparse.FileType('r'))
     args = parser.parse_args(sys.argv[1:])
 
     language_stripper = LanguageStripper(languages=[args.lang])
+
+    candidates = {}
+    if args.candidates:
+        candidates = read_candidates(args.candidates)
 
     for line in sys.stdin:
         line = line.decode('utf-8').split('\t')
@@ -37,7 +66,17 @@ if __name__ == "__main__":
         if not href.lower().endswith('.pdf'):  # broken
             continue
 
-        joined_link = urlparse.urljoin(page_url, href)
+        try:
+            joined_link = urlparse.urljoin(page_url, href)
+        except ValueError:
+            continue
+
+        if candidates and joined_link in candidates:
+            target_link, target_page, _href, _text = candidates[joined_link]
+            print_match(joined_link,
+                        joined_link, target_link,
+                        page_url, target_page)
+            continue
 
         parsed_link = urlparse.urlparse(joined_link)
 
@@ -77,8 +116,19 @@ if __name__ == "__main__":
                 and parsed_link.path and parsed_link.path[-1] != '/':
             stripped_uri = stripped_uri[:-1]
 
+        if candidates and stripped_uri in candidates:
+            target_link, target_page, _href, _text = candidates[stripped_uri]
+            print_match(stripped_uri,
+                        joined_link, target_link,
+                        page_url, target_page)
+            continue
+
         try:
-            sys.stdout.write("\t".join([stripped_uri, args.lang, " ".join(line)]))
+            sys.stdout.write("\t".join([stripped_uri,
+                                        joined_link,
+                                        page_url,
+                                        href,
+                                        link_text]))
             # line still has the newline
         except UnicodeEncodeError:
             pass
