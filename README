@@ -1,0 +1,7 @@
+Stripping language identifiers from PDF urls:
+
+curl -s http://statmt.org/~buck/mtm15/pdf.fixed.gz | \
+gzip -cd | \
+./langstat2candidates.py -lang fr > \
+pdfs_french
+
