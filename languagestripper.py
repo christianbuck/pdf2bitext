@@ -2,6 +2,7 @@ import re
 import urlparse
 import urllib
 
+
 class LanguageStripper(object):
 
     def __init__(self, languages=None):
@@ -22,7 +23,7 @@ class LanguageStripper(object):
             self.code_to_language[code] = "fr"
         for code in ["chinese", "chi", "zh"]:
             self.code_to_language[code] = "zh"
-        for code in ["russian", "russky", "russki", "russkij", "rus", "ru", "ru-ru", "ru-rus", "rus-ru", "rus-rus"]:
+        for code in ["russian", "russky", "russki", "russkij", "rus", "ru"]:
             self.code_to_language[code] = "ru"
         # new, not in "Dirt-Cheap"-paper
         for code in ["tedesco", "de-de", "de-ch", "de-at", "de-li", 'de-lu',
@@ -70,8 +71,8 @@ class LanguageStripper(object):
         result = []
         for k, v in urlparse.parse_qsl(query):
             v = self.re_code.sub('', v)
-            result.append((k, v))
-        return urllib.urlencode(result.encode('utf-8'))
+            result.append((k.encode('utf-8'), v.encode('utf-8')))
+        return urllib.urlencode(result)
 
     def stripn(self, uri):
         return self.re_code.subn('', uri)
