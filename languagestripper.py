@@ -71,7 +71,7 @@ class LanguageStripper(object):
         for k, v in urlparse.parse_qsl(query):
             v = self.re_code.sub('', v)
             result.append((k, v))
-        return urllib.urlencode(result)
+        return urllib.urlencode(result.encode('utf-8'))
 
     def stripn(self, uri):
         return self.re_code.subn('', uri)
