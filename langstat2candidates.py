@@ -35,7 +35,7 @@ def read_candidates(infile, valid_hosts=None):
             continue
         candidates[stripped_uri] = Candidate(
             target_link, target_page, target_href, link_text)
-    sys.stderr.write("Read %d candidates\n" %(len(candidates)))
+    sys.stderr.write("Read %d candidates\n" % (len(candidates)))
     return candidates
 
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-lang', help='language codes')
     parser.add_argument('-candidates',
-                        help='candidates from url strippper',
+                        help='candidates from first pass',
                         type=argparse.FileType('r'))
     args = parser.parse_args(sys.argv[1:])
 
