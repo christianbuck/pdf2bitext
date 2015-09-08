@@ -23,6 +23,8 @@ def make_request(url):
         return False, "connection refused for %s" % url
     except requests.exceptions.InvalidSchema:
         return False, "invalid schema %s" % url
+    except requests.exceptions.TooManyRedirects:
+        return False, "too many redirects for %s" % url
     if r.status_code != 200:
         return False, "file not found: %s" % url
     if 'pdf' not in r.headers['content-type']:
@@ -93,13 +95,13 @@ if __name__ == "__main__":
                         type=argparse.FileType('r'), default=sys.stdin)
     parser.add_argument('-downloaddir',
                         help='download base directory', required=True)
-    parser.add_argument('-threads', default=1, type=1,
-                        help="Number of concurrent downloads")
+    parser.add_argument('-threads', default=1, type=int,
+                        help='Number of concurrent downloads')
 
     args = parser.parse_args(sys.argv[1:])
     assert os.path.exists(args.downloaddir)
 
-    pool = multiprocessing.Pool(processes=10)
+    pool = multiprocessing.Pool(processes=args.threads)
 
     errors, total = 0, 0
 
