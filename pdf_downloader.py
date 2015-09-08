@@ -6,7 +6,7 @@ import sys
 import os
 import multiprocessing
 
-""" Download pairs of pdf files 
+""" Download pairs of pdf files
 
 Input format:
 stripped_url<TAB>source_pdf<TAB>target_pdf<TAB>source_page<TAB>target_page
@@ -26,7 +26,7 @@ def make_request(url):
     except requests.exceptions.TooManyRedirects:
         return False, "too many redirects for %s" % url
     except Exception as e:
-        return False, "other error: %s" %str(e)
+        return False, "other error: %s" % str(e)
     if r.status_code != 200:
         return False, "file not found: %s" % url
     if 'pdf' not in r.headers.get('content-type', '').lower():
@@ -73,7 +73,6 @@ def download_pair(candidate, basedir, session):
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk:
                     f.write(chunk)
-                    f.flush()
     return True, "Success"
 
 CandidatePair = namedtuple('CandidatePair', 'stripped_url, \
