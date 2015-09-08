@@ -5,3 +5,12 @@ gzip -cd | \
 ./langstat2candidates.py -lang fr > \
 pdfs_french
 
+
+Extracting text from xml:
+
+cat 2014-gmw-brochure-english.pdf.xml | \
+./xml2txt.py \
+  -splitter='/home/buck/net/build/moses/scripts/ems/support/split-sentences.perl -l en -b -q' \
+  -tokenizer='/home/buck/net/build/moses/scripts/tokenizer/tokenizer.perl -l en -q -b' > \
+2014-gmw-brochure-english.txt
+
