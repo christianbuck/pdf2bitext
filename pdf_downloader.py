@@ -25,6 +25,8 @@ def make_request(url):
         return False, "invalid schema %s" % url
     except requests.exceptions.TooManyRedirects:
         return False, "too many redirects for %s" % url
+    except Exception as e:
+        return False, "other error: %s" %str(e)
     if r.status_code != 200:
         return False, "file not found: %s" % url
     if 'pdf' not in r.headers.get('content-type', '').lower():
