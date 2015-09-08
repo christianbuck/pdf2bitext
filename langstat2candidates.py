@@ -3,6 +3,7 @@
 import sys
 import re
 import urlparse
+from collections import namedtuple
 
 from languagestripper import LanguageStripper
 
@@ -23,6 +24,7 @@ requests
 
 def read_candidates(infile, valid_hosts=None):
     """ Read candidate urls from previous runs of this script """
+    Candidate = namedtuple('Candidate', 'link, page, href, text')
     candidates = {}
     for line in infile:
         try:
@@ -31,8 +33,9 @@ def read_candidates(infile, valid_hosts=None):
         except:
             sys.stderr.write("Malformed input: '%s'" % line)
             continue
-        candidates[stripped_uri] = (
+        candidates[stripped_uri] = Candidate(
             target_link, target_page, target_href, link_text)
+    sys.stderr.write("Read %d candidates\n" %(len(candidates)))
     return candidates
 
 
@@ -72,10 +75,10 @@ if __name__ == "__main__":
             continue
 
         if candidates and joined_link in candidates:
-            target_link, target_page, _href, _text = candidates[joined_link]
+            target = candidates[joined_link]
             print_match(joined_link,
-                        joined_link, target_link,
-                        page_url, target_page)
+                        joined_link, target.link,
+                        page_url, target.page)
             continue
 
         parsed_link = urlparse.urlparse(joined_link)
@@ -116,19 +119,20 @@ if __name__ == "__main__":
                 and parsed_link.path and parsed_link.path[-1] != '/':
             stripped_uri = stripped_uri[:-1]
 
-        if candidates and stripped_uri in candidates:
-            target_link, target_page, _href, _text = candidates[stripped_uri]
-            print_match(stripped_uri,
-                        joined_link, target_link,
-                        page_url, target_page)
-            continue
-
-        try:
-            sys.stdout.write("\t".join([stripped_uri,
-                                        joined_link,
-                                        page_url,
-                                        href,
-                                        link_text]))
-            # line still has the newline
-        except UnicodeEncodeError:
-            pass
+        if candidates:
+            if stripped_uri in candidates:
+                target = candidates[stripped_uri]
+                print_match(stripped_uri,
+                            joined_link, target.link,
+                            page_url, target.page)
+                continue
+        else:
+            try:
+                sys.stdout.write("\t".join([stripped_uri,
+                                            joined_link,
+                                            page_url,
+                                            href,
+                                            link_text]))
+                # line still has the newline
+            except UnicodeEncodeError:
+                pass
