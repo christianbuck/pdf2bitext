@@ -27,7 +27,7 @@ def make_request(url):
         return False, "too many redirects for %s" % url
     if r.status_code != 200:
         return False, "file not found: %s" % url
-    if 'pdf' not in r.headers['content-type']:
+    if 'pdf' not in r.headers['content-type'].lower():
         return False, "wrong content type: %s" \
             % r.headers['content-type']
     return True, r
