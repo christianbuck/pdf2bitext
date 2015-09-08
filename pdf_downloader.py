@@ -4,6 +4,7 @@ from collections import namedtuple
 import requests
 import sys
 import os
+import multiprocessing
 
 """ Download pairs of pdf files 
 
@@ -74,6 +75,14 @@ def download_pair(candidate, basedir, session):
 CandidatePair = namedtuple('CandidatePair', 'stripped_url, \
                             source_url, target_url, source_page, target_page')
 
+session = requests.Session()
+
+
+def process_line(line):
+    candidate = CandidatePair(*line.split('\t'))
+    success, reason = download_pair(candidate, args.downloaddir, session)
+    return success, reason, candidate
+
 
 if __name__ == "__main__":
     import argparse
@@ -84,16 +93,18 @@ if __name__ == "__main__":
                         type=argparse.FileType('r'), default=sys.stdin)
     parser.add_argument('-downloaddir',
                         help='download base directory', required=True)
+    parser.add_argument('-threads', default=1, type=1,
+                        help="Number of concurrent downloads")
 
     args = parser.parse_args(sys.argv[1:])
     assert os.path.exists(args.downloaddir)
 
-    session = requests.Session()
-    errors, total = 0, 0
-    for line in args.candidates:
-        candidate = CandidatePair(*line.split('\t'))
-        success, reason = download_pair(candidate, args.downloaddir, session)
+    pool = multiprocessing.Pool(processes=10)
 
+    errors, total = 0, 0
+
+    for success, reason, candidate in pool.imap_unordered(process_line,
+                                                          args.candidates):
         total += 1
         if not success:
             sys.stderr.write("Error %d/%d '%s' processing %s <-> %s\n" %
