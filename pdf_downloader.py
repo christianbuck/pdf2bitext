@@ -15,6 +15,21 @@ origins.
 """
 
 
+def make_request(url):
+    try:
+        r = requests.get(url, stream=True)
+    except requests.exceptions.ConnectionError:
+        return False, "connection refused for %s" % url
+    except requests.exceptions.InvalidSchema:
+        return False, "invalid schema %s" % url
+    if r.status_code != 200:
+        return False, "file not found: %s" % url
+    if 'pdf' not in r.headers['content-type']:
+        return False, "wrong content type: %s" \
+            % r.headers['content-type']
+    return True, r
+
+
 def download_pair(candidate, basedir, session):
     source_pdf = candidate.source_url
     target_pdf = candidate.target_url
@@ -27,25 +42,16 @@ def download_pair(candidate, basedir, session):
         # Duplicate download?
         return False, "Target path exists already: %s" % path
 
-    # 1. Check that both files exist and are similar size
-    try:
-        source_r = requests.get(source_pdf, stream=True)
-    except requests.exceptions.ConnectionError:
-        return False, "connection refused for %s" % source_pdf
-    if source_r.status_code != 200:
-        return False, "target file not found: %s" % source_pdf
-    if 'pdf' not in source_r.headers['content-type']:
-        return False, "wrong content type: %s" \
-            % source_r.headers['content-type']
-    try:
-        target_r = requests.get(target_pdf, stream=True)
-    except requests.exceptions.ConnectionError:
-        return False, "connection refused for %s" % target_pdf
-    if target_r.status_code != 200:
-        return False, "target file not found: %s" % target_pdf
-    if 'pdf' not in target_r.headers['content-type']:
-        return False, "wrong content type: %s" \
-            % target_r.headers['content-type']
+    # 1. Check that both files exist and have correct type
+    success, source_r = make_request(source_pdf)
+    if not success:
+        reason = source_r
+        return False, reason
+
+    success, target_r = make_request(target_pdf)
+    if not success:
+        reason = target_r
+        return False, reason
 
     # 2. Make target directory
     if os.path.exists(path):  # slight race condition here
