@@ -14,3 +14,6 @@ cat 2014-gmw-brochure-english.pdf.xml | \
   -tokenizer='/home/buck/net/build/moses/scripts/tokenizer/tokenizer.perl -l en -q -b' > \
 2014-gmw-brochure-english.txt
 
+Extracting bitext (hardcoded to French for now):
+find /mmt/pdfs/pdfs.fr -type d | grep -P "\d\d\d/\d\d\d/\d\d\d$" | xargs ./pdf2txt.sh
+
