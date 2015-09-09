@@ -24,6 +24,8 @@ class LanguageStripper(object):
         for code in ["chinese", "chi", "zh"]:
             self.code_to_language[code] = "zh"
         # new, not in "Dirt-Cheap"-paper
+        for code in ["ces"]:  # suggested by Ondrej
+            self.code_to_language[code] = "cs"
         for code in ["russian", "russky", "russki", "russkij", "rus", "ru"]:
             self.code_to_language[code] = "ru"
         for code in ["tedesco", "de-de", "de-ch", "de-at", "de-li", 'de-lu',
