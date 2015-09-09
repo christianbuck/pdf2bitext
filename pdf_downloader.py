@@ -27,6 +27,8 @@ def make_request(url):
         return False, "invalid schema %s" % url
     except requests.exceptions.TooManyRedirects:
         return False, "too many redirects for %s" % url
+    except (KeyboardInterrupt, SystemExit):
+        raise
     except Exception as e:
         return False, "other error: %s" % str(e)
     if r.status_code != 200:
@@ -76,6 +78,8 @@ def download_pair(candidate, basedir, session):
                 for chunk in r.iter_content(chunk_size=1024):
                     if chunk:
                         f.write(chunk)
+    except (KeyboardInterrupt, SystemExit):
+        raise
     except:
         shutil.rmtree(path, ignore_errors=True)
         return False, "download error"
