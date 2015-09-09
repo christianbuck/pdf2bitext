@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from collections import namedtuple
-import requests
-import sys
-import os
+from itertools import imap
 import multiprocessing
+import os
+import requests
 import shutil
+import sys
 
 """ Download pairs of pdf files
 
@@ -107,12 +108,16 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
     assert os.path.exists(args.downloaddir)
 
-    pool = multiprocessing.Pool(processes=args.threads)
-
     errors, total = 0, 0
 
-    for success, reason, candidate in pool.imap_unordered(process_line,
-                                                          args.candidates):
+    it = None
+    if args.threads > 1:
+        pool = multiprocessing.Pool(processes=args.threads)
+        it = pool.imap_unordered(process_line, args.candidates)
+    else:
+        it = imap(process_line, args.candidates)
+
+    for success, reason, candidate in it:
         total += 1
         if not success:
             sys.stderr.write("Error %d/%d '%s' processing %s <-> %s\n" %
