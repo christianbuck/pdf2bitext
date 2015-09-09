@@ -5,6 +5,7 @@ import requests
 import sys
 import os
 import multiprocessing
+import shutil
 
 """ Download pairs of pdf files
 
@@ -68,11 +69,15 @@ def download_pair(candidate, basedir, session):
     l = open(os.path.join(path, "log.txt"), 'wc')
     l.write("%s\t%s\n" % (os.path.join(path, 'source.pdf'), source_pdf))
     l.write("%s\t%s\n" % (os.path.join(path, 'target.pdf'), target_pdf))
-    for r, name in [[source_r, 'source.pdf'], [target_r, 'target.pdf']]:
-        with open(os.path.join(path, name), 'wb') as f:
-            for chunk in r.iter_content(chunk_size=1024):
-                if chunk:
-                    f.write(chunk)
+    try:
+        for r, name in [[source_r, 'source.pdf'], [target_r, 'target.pdf']]:
+            with open(os.path.join(path, name), 'wb') as f:
+                for chunk in r.iter_content(chunk_size=1024):
+                    if chunk:
+                        f.write(chunk)
+    except:
+        shutil.rmtree(path, ignore_errors=True)
+        return False, "download error"
     return True, "Success"
 
 CandidatePair = namedtuple('CandidatePair', 'stripped_url, \
