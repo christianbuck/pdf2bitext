@@ -37,9 +37,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-lang', help='language', default='en')
     parser.add_argument(
-        '-tokenizer', help='call to tokenizer, including arguments')
+        '-tokenizer', help='call to tokenizer, including arguments',
+        required=True)
     parser.add_argument(
-        '-splitter', help='call to sentence splitter, including arguments')
+        '-splitter', help='call to sentence splitter, including arguments',
+        required=True)
     args = parser.parse_args(sys.argv[1:])
 
     xml = sys.stdin.read()
