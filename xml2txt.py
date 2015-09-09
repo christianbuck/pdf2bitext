@@ -37,7 +37,7 @@ class TextProcessor(object):
 
 def print_text(root):
     for elem in root.findall('head/title/p'):
-        print "\n".join(text_processor.process(elem.text))
+        print "\n".join(text_processor.process(elem.text)).encode("utf-8")
         print ""
 
     first = True
