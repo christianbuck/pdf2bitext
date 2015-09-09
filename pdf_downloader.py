@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from collections import namedtuple
-import requests
-import sys
-import os
+from itertools import imap
 import multiprocessing
+import os
+import requests
+import shutil
+import sys
 
-""" Download pairs of pdf files 
+""" Download pairs of pdf files
 
 Input format:
 stripped_url<TAB>source_pdf<TAB>target_pdf<TAB>source_page<TAB>target_page
@@ -25,8 +27,10 @@ def make_request(url):
         return False, "invalid schema %s" % url
     except requests.exceptions.TooManyRedirects:
         return False, "too many redirects for %s" % url
+    except (KeyboardInterrupt, SystemExit):
+        raise
     except Exception as e:
-        return False, "other error: %s" %str(e)
+        return False, "other error: %s" % str(e)
     if r.status_code != 200:
         return False, "file not found: %s" % url
     if 'pdf' not in r.headers.get('content-type', '').lower():
@@ -68,12 +72,17 @@ def download_pair(candidate, basedir, session):
     l = open(os.path.join(path, "log.txt"), 'wc')
     l.write("%s\t%s\n" % (os.path.join(path, 'source.pdf'), source_pdf))
     l.write("%s\t%s\n" % (os.path.join(path, 'target.pdf'), target_pdf))
-    for r, name in [[source_r, 'source.pdf'], [target_r, 'target.pdf']]:
-        with open(os.path.join(path, name), 'wb') as f:
-            for chunk in r.iter_content(chunk_size=1024):
-                if chunk:
-                    f.write(chunk)
-                    f.flush()
+    try:
+        for r, name in [[source_r, 'source.pdf'], [target_r, 'target.pdf']]:
+            with open(os.path.join(path, name), 'wb') as f:
+                for chunk in r.iter_content(chunk_size=1024):
+                    if chunk:
+                        f.write(chunk)
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except:
+        shutil.rmtree(path, ignore_errors=True)
+        return False, "download error"
     return True, "Success"
 
 CandidatePair = namedtuple('CandidatePair', 'stripped_url, \
@@ -103,12 +112,16 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
     assert os.path.exists(args.downloaddir)
 
-    pool = multiprocessing.Pool(processes=args.threads)
-
     errors, total = 0, 0
 
-    for success, reason, candidate in pool.imap_unordered(process_line,
-                                                          args.candidates):
+    it = None
+    if args.threads > 1:
+        pool = multiprocessing.Pool(processes=args.threads)
+        it = pool.imap_unordered(process_line, args.candidates)
+    else:
+        it = imap(process_line, args.candidates)
+
+    for success, reason, candidate in it:
         total += 1
         if not success:
             sys.stderr.write("Error %d/%d '%s' processing %s <-> %s\n" %
