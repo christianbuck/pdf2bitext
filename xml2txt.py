@@ -54,6 +54,8 @@ def print_ep(root):
     chapter = 1
     print "<CHAPTER ID=%d>" % chapter
     for elem in root.findall('head/title/p'):
+        if not elem.text:
+            continue
         print "\n".join(text_processor.process(elem.text))
 
     page = 1
@@ -63,6 +65,8 @@ def print_ep(root):
             page += 1
             first = True
             for p in div.findall('p'):
+                if not p.text:
+                    continue
                 if not first:
                     print "<P>"
                 first = False
