@@ -66,7 +66,11 @@ def download_pair(candidate, basedir, session):
     if os.path.exists(path):  # slight race condition here
         # Duplicate download?
         return False, "Target path exists already: %s" % path
-    os.makedirs(path)
+
+    try: 
+        os.makedirs(path)
+    except OSError:
+        return False, "Target path exists already: %s" % path
 
     # 3. Download pdf and document original names
     l = open(os.path.join(path, "log.txt"), 'wc')
