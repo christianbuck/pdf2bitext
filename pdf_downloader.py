@@ -33,9 +33,9 @@ def make_request(url):
         return False, "other error: %s" % str(e)
     if r.status_code != 200:
         return False, "file not found: %s" % url
-    if 'pdf' not in r.headers.get('content-type', '').lower():
-        return False, "wrong content type: %s" \
-            % r.headers['content-type']
+    content_type = r.headers.get('content-type', '')
+    if 'pdf' not in content_type.lower():
+        return False, "wrong content type: %s" % content_type
     return True, r
 
 
@@ -67,7 +67,7 @@ def download_pair(candidate, basedir, session):
         # Duplicate download?
         return False, "Target path exists already: %s" % path
 
-    try: 
+    try:
         os.makedirs(path)
     except OSError:
         return False, "Target path exists already: %s" % path
