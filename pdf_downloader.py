@@ -32,7 +32,7 @@ def make_request(url):
     except Exception as e:
         return False, "other error: %s" % str(e)
     if r.status_code != 200:
-        return False, "file not found: %s" % url
+        return False, "HTTP response not OK: %s for %s" %(r.status_code, url)
     content_type = r.headers.get('content-type', '')
     if 'pdf' not in content_type.lower():
         return False, "wrong content type: %s" % content_type
@@ -47,7 +47,7 @@ def download_pair(candidate, basedir, session):
     h = str(hash(candidate.stripped_url))
     path = os.path.join(basedir, h[1:4], h[4:7], h[7:10])
 
-    if os.path.exists(path):  # slight race condition here
+    if os.path.exists(path):
         # Duplicate download?
         return False, "Target path exists already: %s" % path
 
