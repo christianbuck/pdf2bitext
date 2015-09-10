@@ -18,9 +18,9 @@ origins.
 """
 
 
-def make_request(url):
+def make_request(url, session):
     try:
-        r = requests.get(url, stream=True)
+        r = session.get(url, stream=True)
     except requests.exceptions.ConnectionError:
         return False, "connection refused for %s" % url
     except requests.exceptions.InvalidSchema:
@@ -32,7 +32,7 @@ def make_request(url):
     except Exception as e:
         return False, "other error: %s" % str(e)
     if r.status_code != 200:
-        return False, "HTTP response not OK: %s for %s" %(r.status_code, url)
+        return False, "HTTP response not OK: %s for %s" % (r.status_code, url)
     content_type = r.headers.get('content-type', '')
     if 'pdf' not in content_type.lower():
         return False, "wrong content type: %s" % content_type
@@ -52,12 +52,12 @@ def download_pair(candidate, basedir, session):
         return False, "Target path exists already: %s" % path
 
     # 1. Check that both files exist and have correct type
-    success, source_r = make_request(source_pdf)
+    success, source_r = make_request(source_pdf, session)
     if not success:
         reason = source_r
         return False, reason
 
-    success, target_r = make_request(target_pdf)
+    success, target_r = make_request(target_pdf, session)
     if not success:
         reason = target_r
         return False, reason
