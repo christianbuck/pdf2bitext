@@ -6,6 +6,8 @@ import sys
 import langid
 from collections import defaultdict
 
+""" Removes some wrongly aligned pairs from hunalign output """
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -26,7 +28,7 @@ if __name__ == "__main__":
     langid.set_languages([args.source_lang, args.target_lang])
     for line in args.infile:
         totalCount += 1
-        [url1, url2, source, target, score] = line.split("\t")
+        source, target, score = line.split("\t")
         langid_source = langid.classify(source.lower())
         langid_target = langid.classify(target.lower())
         if not source.strip():
