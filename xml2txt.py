@@ -16,23 +16,26 @@ class TextProcessor(object):
             self.tokenizer = ExternalProcessor(tokenizer)
 
     def split_sentences(self, text):
+        if not text:
+            return []
         p = subprocess.Popen(self.split_cmd.split(), stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE)
         out, err = p.communicate(input=text.encode("utf-8") + "\n")
         return out.decode("utf-8").split("\n")
 
     def process(self, text):
-        if self.split_cmd:
-            text = self.split_sentences(text)
-        else:
-            text = [text]
-        for line in text:
-            if not line.strip():
-                continue
-            if self.tokenizer:
-                yield self.tokenizer.process(line).strip()
+        if text:
+            if self.split_cmd:
+                text = self.split_sentences(text)
             else:
-                yield line.strip()
+                text = [text]
+            for line in text:
+                if not line.strip():
+                    continue
+                if self.tokenizer:
+                    yield self.tokenizer.process(line).strip()
+                else:
+                    yield line.strip()
 
 
 def print_text(root):
