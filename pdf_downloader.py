@@ -20,7 +20,7 @@ origins.
 
 def make_request(url, session):
     try:
-        r = session.get(url, stream=True)
+        r = session.get(url, stream=True, timeout=1.0)
     except requests.exceptions.ConnectionError:
         return False, "connection refused for %s" % url
     except requests.exceptions.InvalidSchema:
