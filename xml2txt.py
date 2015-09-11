@@ -6,6 +6,9 @@ import xml.etree.ElementTree as ET
 import subprocess
 from external_processor import ExternalProcessor
 
+import langid
+import chardet
+
 
 class TextProcessor(object):
 
@@ -76,10 +79,38 @@ def print_ep(root):
                 print "\n".join(text_processor.process(p.text)).encode("utf-8")
 
 
+def fix_encoding(expected_langs, text, data):
+    detected_lang, _confidence = langid.classify(text)
+    if detected_lang not in expected_langs:
+        enc = chardet.detect(text.encode('raw_unicode_escape'))
+        sys.stderr.write(str(enc))
+        if enc['encoding'] != 'ascii':
+            fixed_text = text.encode(
+                'raw_unicode_escape').decode(enc['encoding'])
+            detected_lang, _confidence = langid.classify(fixed_text)
+            if detected_lang in expected_langs:
+                fixed_data = data.decode(
+                    'utf-8').encode('raw_unicode_escape').decode(
+                    enc['encoding']).encode('utf-8')
+                return fixed_data
+    return data
+
+
+def fix_xml_encoding(expected_langs, xml):
+    parser = ET.XMLParser()
+    it = ET.iterparse(StringIO(xml), parser=parser)
+    text = []
+    for _, el in it:
+        if el.text and el.text.strip():
+            text.append(el.text)
+    fixed_xml = fix_encoding(expected_langs, "\n".join(text), xml)
+    return fixed_xml
+
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-lang', help='language', default='en')
+    parser.add_argument('-lang', nargs='+', help='language', default='en')
     parser.add_argument('-ep', help='europarl stye', action='store_true')
     parser.add_argument(
         '-tokenizer', help='call to tokenizer, including arguments')
@@ -88,6 +119,7 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
 
     xml = sys.stdin.read()
+    xml = fix_xml_encoding(args.lang, xml)
     parser = ET.XMLParser()
     it = ET.iterparse(StringIO(xml), parser=parser)
 
