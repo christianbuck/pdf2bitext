@@ -25,20 +25,22 @@ if __name__ == "__main__":
 
     deletions = defaultdict(list)
 
-    endCount = 0
-    totalCount = 0
+    n_written = 0
+    n_total = 0
     langid.set_languages([args.source_lang, args.target_lang])
     for line in args.infile:
-        totalCount += 1
+        n_total += 1
         source, target, score = line.split("\t")
+        if float(score) < args.minscore:
+            deletions["low score"].append('')
         if source == target:
             deletions["identical"].append(target)
             continue
         if not source.strip():
-            deletions["source_empty"].append(source)
+            deletions["source_empty"].append('')
             continue
         elif not target.strip():
-            deletions["target_empty"].append(target)
+            deletions["target_empty"].append('')
             continue
 
         langid_source = langid.classify(source.lower())
@@ -58,10 +60,11 @@ if __name__ == "__main__":
             deletions["source_too_short"].append("%s\t%s" % (source, target))
         else:
             args.outfile.write(line)
-            endCount += 1
-    print "Written: %d of %d = %f percent" % (endCount, totalCount,
-                                              100. * endCount / totalCount)
+            n_written += 1
+    print "Written: %d of %d = %f percent" % (n_written, n_total,
+                                              100. * n_written / n_total)
     for reason, deleted in deletions.iteritems():
         print "Deleted %d items due to %s" % (len(deleted), reason)
         for line in deleted:
-            print "\t%s" % line
+            if line.strip():
+                print "\t%s" % line
