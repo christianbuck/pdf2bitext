@@ -31,21 +31,28 @@ if __name__ == "__main__":
     for line in args.infile:
         totalCount += 1
         source, target, score = line.split("\t")
-        langid_source = langid.classify(source.lower())
-        langid_target = langid.classify(target.lower())
+        if source == target:
+            deletions["identical"].append(target)
+            continue
         if not source.strip():
             deletions["source_empty"].append(source)
+            continue
         elif not target.strip():
             deletions["target_empty"].append(target)
-        elif langid_source[0] != args.source_lang and langid_source[1] > 0.9:
+            continue
+
+        langid_source = langid.classify(source.lower())
+        if langid_source[0] != args.source_lang and langid_source[1] > 0.9:
             deletions["source_lang"].append(
                 "%s\t%s\t%f" % (source, langid_source[0], langid_source[1]))
-        elif langid_target[0] != args.target_lang and langid_target[1] > 0.9:
+            continue
+        langid_target = langid.classify(target.lower())
+        if langid_target[0] != args.target_lang and langid_target[1] > 0.9:
             deletions["target_lang"].append(
                 "%s\t%s\t%f" % (target, langid_target[0], langid_target[1]))
-        elif source == target:
-            deletions["identical"].append(target)
-        elif float((len(source) + 15)) / float(len(target) + 15) > 1.5:
+            continue
+
+        if float((len(source) + 15)) / float(len(target) + 15) > 1.5:
             deletions["source_too_long"].append("%s\t%s" % (source, target))
         elif float((len(target) + 15)) / float(len(source) + 15) > 1.5:
             deletions["source_too_short"].append("%s\t%s" % (source, target))
