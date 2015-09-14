@@ -15,6 +15,8 @@ if __name__ == "__main__":
                         default=sys.stdin)
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
                         default=sys.stdout)
+    parser.add_argument('-minscore', type=float, default=0,
+                        help='minimum score from hunalign')
     parser.add_argument('-s', '--lang1', help='source language',
                         dest='source_lang', default='en')
     parser.add_argument('-t', '--lang2', help='target language',
